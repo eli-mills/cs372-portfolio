@@ -1,10 +1,10 @@
 import socket
-from chat_server import read_incoming_data, send_outgoing_data
+from chat_server import read_incoming_data, send_outgoing_data, get_args
 
 
-def main():
-    with socket.create_connection(("localhost", 8080)) as server_socket:
-        print("Connected to: localhost on port: 8080")
+def main(host, port):
+    with socket.create_connection((host, port)) as server_socket:
+        print(f"Connected to: {host} on port: {port}")
         print("Type /q to quit")
         print("Enter message to send...")
         while True:
@@ -20,8 +20,6 @@ def main():
             print(message_received)
 
 
-
-
-
 if __name__ == '__main__':
-    main()
+    arg_host, arg_port = get_args("Start a chat client.")
+    main(arg_host, arg_port)
