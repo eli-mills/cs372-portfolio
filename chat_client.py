@@ -1,22 +1,20 @@
 import socket
-from chat_server import read_incoming_data, send_outgoing_data, get_args
+from chat_server import read_and_print, send_user_input, get_args
 
 
 def main(host, port):
+    # Set up socket
     with socket.create_connection((host, port)) as server_socket:
         print(f"Connected to: {host} on port: {port}")
-        print("Type /q to quit")
-        print("Enter message to send...")
-        new_message = input(">")
+        do_long_prompt = True
+
+        # Main loop
         while True:
-            send_outgoing_data(server_socket, new_message)
-            if new_message == "/q":
+            if send_user_input(server_socket, do_long_prompt):
                 break
-            message_received = read_incoming_data(server_socket)
-            if message_received == "/q":
+            do_long_prompt = False
+            if read_and_print(server_socket):
                 break
-            print(message_received)
-            new_message = input(">")
 
 
 if __name__ == '__main__':

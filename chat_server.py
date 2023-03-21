@@ -4,6 +4,7 @@ import argparse
 
 SOCKET_BUFFER = 1024        # Buffer argument for recv
 
+
 def parse_socket_data(socket_content: str) -> list[str]:
     """
     Parses a string for length and data.
@@ -44,6 +45,23 @@ def send_outgoing_data(client_socket, msg_to_send):
         total_bytes += client_socket.send(byte_msg[total_bytes:])
 
 
+def read_and_print(client_socket):
+    message_received = read_incoming_data(client_socket)
+    if message_received == "/q":
+        return True
+    print(message_received)
+    return False
+
+
+def send_user_input(client_socket, do_long_prompt):
+    do_long_prompt and print("Type /q to quit\nEnter message to send...")
+    new_message = input(">")
+    send_outgoing_data(client_socket, new_message)
+    if new_message == "/q":
+        return True
+    return False
+
+
 def get_args(desc=""):
     parser = argparse.ArgumentParser(description=desc,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -58,26 +76,20 @@ def get_args(desc=""):
 def main(host, port):
     # Set up socket
     with socket.create_server((host, port)) as server_socket:
-        server_socket.listen(5)
         print(f"Server listening on: {host} on port: {port}")
         client_socket, addr = server_socket.accept()
         with client_socket:
             print(f"Connected by {addr}")
             print("Waiting for message...")
             do_long_prompt = True
-            long_prompt = "Type /q to quit\nEnter message to send..."
+
             # Main loop
             while True:
-                message_received = read_incoming_data(client_socket)
-                if message_received == "/q":
+                if read_and_print(client_socket):
                     break
-                print(message_received)
-                do_long_prompt and print(long_prompt)
+                if send_user_input(client_socket, do_long_prompt):
+                    break
                 do_long_prompt = False
-                new_message = input(">")
-                send_outgoing_data(client_socket, new_message)
-                if new_message == "/q":
-                    break
 
 
 if __name__ == '__main__':
