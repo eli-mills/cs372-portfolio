@@ -7,17 +7,16 @@ def main(host, port):
         print(f"Connected to: {host} on port: {port}")
         print("Type /q to quit")
         print("Enter message to send...")
+        new_message = input(">")
         while True:
-            new_message = input(">")
             send_outgoing_data(server_socket, new_message)
             if new_message == "/q":
                 break
             message_received = read_incoming_data(server_socket)
-            if not message_received:
-                continue
             if message_received == "/q":
                 break
             print(message_received)
+            new_message = input(">")
 
 
 if __name__ == '__main__':
