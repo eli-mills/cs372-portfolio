@@ -1,2 +1,2 @@
-[]  Fix bug on empty input
+[X]  Fix bug on empty input
 [X]  Fix bug on server sends /q
