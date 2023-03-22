@@ -1,5 +1,5 @@
 import socket
-from chat_server import read_and_print, send_user_input, get_args
+from chat_server import ChatSocket, get_args
 
 
 def main(host, port):
@@ -7,13 +7,14 @@ def main(host, port):
     with socket.create_connection((host, port)) as server_socket:
         print(f"Connected to: {host} on port: {port}")
         do_long_prompt = True
+        chatter = ChatSocket(server_socket)
 
         # Main loop
         while True:
-            if send_user_input(server_socket, do_long_prompt):
+            if chatter.send_user_input(do_long_prompt):
                 break
             do_long_prompt = False
-            if read_and_print(server_socket):
+            if chatter.read_and_print():
                 break
 
 
