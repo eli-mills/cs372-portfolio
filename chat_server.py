@@ -57,18 +57,24 @@ class ChatSocket:
     def start_game(self):
         self.game = tic_tac_toe.TicTacToeGame()
 
-    def parse_for_command(self, message: str, prints: bool = True) -> None:
+    def parse_for_command(self, message: str) -> None:
         """
         Checks if message is a command. Returns whether to stop main loop.
         :param message: string to parse
         :param prints: whether to print the message if not a command
         """
+        # Commands to parse regardless of state
         if message == "/q":
             self.state = self.TERMINATE
             return
         if message == "/tic":
-            pass
-        prints and print(message)
+            self.start_game()
+
+        # Commands with behavior determined by state
+        if self.game is not None and self.state == self.CHATTING:
+            self.make_player_move(message)
+        elif self.state == self.WAITING:
+            print(message)
 
     def read_and_handle(self) -> bool:
         """
@@ -76,16 +82,16 @@ class ChatSocket:
         :return: True if message should break main loop, else False.
         """
         message_received = self.read_incoming_data()
-        self.state = self.CHATTING
         self.parse_for_command(message_received)
+        self.state = self.CHATTING if self.state == self.WAITING else self.state
 
     def send_user_input(self):
         self.do_long_prompt and print("Type /q to quit\nEnter message to send...")
-        new_message = input(">")
-        self.send_outgoing_data(new_message)
-        self.state = self.WAITING
-        self.parse_for_command(new_message, False)
         self.do_long_prompt = False
+        new_message = input(">")
+        self.parse_for_command(new_message)
+        self.send_outgoing_data(new_message)
+        self.state = self.WAITING if self.state == self.CHATTING else self.state
 
     def chat(self):
         """
