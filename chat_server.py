@@ -13,6 +13,7 @@ class ChatInterface:
         self.state = self.WAITING if is_server else self.CHATTING
         self.do_long_prompt = True
         self.game, self.player, self.opponent = None, None, None
+        self.game_requested = False
         self.game_confirmed = False
 
     @staticmethod
@@ -67,8 +68,10 @@ class ChatInterface:
         return f"{valid_move[0]} {valid_move[1]}"
 
     def start_game(self):
-        if self.game is not None:
+        if self.game is not None or self.game_requested or self.game_confirmed:
             return
+
+        self.game_requested = True
 
         # Person who initiates game is player X
         if self.state == self.CHATTING:
@@ -79,6 +82,8 @@ class ChatInterface:
             print("Play Tic-Tac-Toe? Type /tac to play, /toe to cancel.")
 
     def confirm_game(self):
+        if not self.game_requested:
+            return
         self.game_confirmed = True
 
         # Acceptor needs to set up game
@@ -95,6 +100,7 @@ class ChatInterface:
                             f"{tic_tac_toe.TicTacToeGame.STATUS_CODES[self.game.status]}")
         self.game = None
         self.game_confirmed = False
+        self.game_requested = False
 
     def parse_for_command(self, message: str) -> str:
         """
@@ -105,8 +111,8 @@ class ChatInterface:
         # Commands to parse regardless of state
         if message == "/q":
             self.state = self.TERMINATE
-            return
-        if message == "/tic":               # Initiate game request
+            prints = False
+        elif message == "/tic":               # Initiate game request
             self.start_game()
             prints = False
         elif message == "/tac":               # Accept game request
