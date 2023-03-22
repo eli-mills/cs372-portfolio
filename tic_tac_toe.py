@@ -1,6 +1,3 @@
-import os
-
-
 class Player:
     """
     Defines data members and methods for a Tic Tac Toe player.
@@ -47,7 +44,8 @@ class TicTacToeGame:
     ]
 
     STATUS_CODES = [
-        "ONGOING",
+        "X TURN",
+        "O TURN",
         "X WON",
         "O WON",
         "DRAW"
@@ -61,13 +59,12 @@ class TicTacToeGame:
         self.players = Player("X", self), Player("O", self)
         self.status = 0
         self.validation = 0
-        self.curr_player = 0
 
     def toggle_players(self) -> None:
         """
         Switch each player's active state and update current player.
         """
-        self.curr_player = -self.curr_player + 1
+        self.status = -self.status + 1
 
     def is_move_valid(self, symbol: str, row: int, col: int) -> bool:
         """
@@ -80,9 +77,9 @@ class TicTacToeGame:
         try:
             validations = [
                 True,
-                symbol == self.players[self.curr_player].SYMBOL,    # WRONG TURN
+                symbol == self.players[self.status].SYMBOL,         # WRONG TURN
                 self.board[row][col] == "_",                        # OCCUPIED
-                self.status == 0                                    # GAME OVER
+                self.status < 2                                     # GAME OVER
             ]
             if not all(validations):
                 self.validation = validations.index(False)
@@ -90,7 +87,7 @@ class TicTacToeGame:
             self.validation = 0
             return True
         except IndexError:                          # INDEX OUT OF RANGE
-            self.validation = 4
+            self.validation = 4 if self.status < 2 else 3
             return False
 
     def is_win(self) -> bool:
@@ -121,10 +118,10 @@ class TicTacToeGame:
         :return: value of is_game_over
         """
         if self.is_win():
-            self.status = ["X", "O"].index(symbol) + 1
+            self.status = ["X", "O"].index(symbol) + 2
         elif self.is_draw():
-            self.status = 3
-        return self.status > 0
+            self.status = 4
+        return self.status > 1
 
     def print_board(self):
         """
@@ -147,6 +144,10 @@ class TicTacToeGame:
         self.board[row][col] = symbol
         not self.update_is_game_over(symbol) and self.toggle_players()
         return True
+
+
+def tic_tac_toe_cli():
+    pass
 
 
 if __name__ == '__main__':
