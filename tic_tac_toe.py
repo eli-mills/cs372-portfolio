@@ -26,42 +26,71 @@ class Player:
         :param col: second level index of game board
         :return: True if successful, else False
         """
-        return (self.is_my_turn
-                and self.GAME.make_move(self.SYMBOL, row, col) or print("Move failed validation. Try again.")) \
-            or print("Current player is not active.")
+        # if not self.is_my_turn:
+        #     print(f"Player {self.SYMBOL}: it is not your turn.")
+        #     return False
+
+        return self.GAME.make_move(self.SYMBOL, row, col) \
+            or print("Move failed validation. Try again.")
 
 
 class TicTacToeGame:
     """
     Defines data members and methods for a game of Tic Tac Toe.
     """
+    VALIDATION_CODES = [
+        "PASSED",
+        "WRONG TURN",
+        "SPACE OCCUPIED",
+        "GAME OVER",
+        "INDEX OUT OF RANGE"
+    ]
+
+    STATUS_CODES = [
+        "ONGOING",
+        "X WON",
+        "O WON",
+        "DRAW"
+    ]
+
     def __init__(self):
         """
         Initializes a game of Tic Tac Toe with two players.
         """
         self.board = [["_" for _ in range(3)] for _ in range(3)]
         self.players = Player("X", self), Player("O", self)
-        self.players[0].is_my_turn = True
-        self.is_game_over = False
+        self.status = 0
+        self.validation = 0
+        self.curr_player = 0
 
     def toggle_players(self) -> None:
         """
         Switch each player's active state and update current player.
         """
-        [player.toggle_turn() for player in self.players]
+        self.curr_player = -self.curr_player + 1
 
-    def is_move_valid(self, row: int, col: int) -> bool:
+    def is_move_valid(self, symbol: str, row: int, col: int) -> bool:
         """
         Checks if the given move is allowed. Assumes active player is making move.
+        :param symbol: X or O
         :param row: first-level index of board
         :param col: second-level index of board
         :return: True if allowed, otherwise False.
         """
         try:
-            return (self.board[row][col] == "_" or print("Move failed: space not available."))\
-                and (not self.is_game_over or print("Move failed: game is over."))
-        except IndexError:
-            print("Index out of range.")
+            validations = [
+                True,
+                symbol == self.players[self.curr_player].SYMBOL,    # WRONG TURN
+                self.board[row][col] == "_",                        # OCCUPIED
+                self.status == 0                                    # GAME OVER
+            ]
+            if not all(validations):
+                self.validation = validations.index(False)
+                return False
+            self.validation = 0
+            return True
+        except IndexError:                          # INDEX OUT OF RANGE
+            self.validation = 4
             return False
 
     def is_win(self) -> bool:
@@ -69,10 +98,14 @@ class TicTacToeGame:
         Check if there is a winning position on the board.
         :return: True if winning position, else False.
         """
-        return any([all([square == row[0] != "_" for square in row]) for row in self.board]) \
-            or any([all([row[col] == self.board[0][col] != "_" for row in self.board]) for col in range(3)]) \
-            or all([self.board[idx][idx] == self.board[0][0] != "_" for idx in range(3)]) \
-            or all([self.board[row][col] == self.board[1][1] != "_" for row in range(3) for col in range(2, -1, -1)])
+        return any([all([square == row[0] != "_" for square in row])
+                    for row in self.board]) \
+            or any([all([row[col] == self.board[0][col] != "_"
+                         for row in self.board]) for col in range(3)]) \
+            or all([self.board[idx][idx] == self.board[0][0] != "_"
+                    for idx in range(3)]) \
+            or all([self.board[row][col] == self.board[1][1] != "_"
+                    for row in range(3) for col in range(2, -1, -1)])
 
     def is_draw(self) -> bool:
         """
@@ -83,24 +116,23 @@ class TicTacToeGame:
 
     def update_is_game_over(self, symbol) -> bool:
         """
-        Check for game over state. Print message and update internal state.
+        Update internal game state if win or draw.
         :param symbol: symbol of current turn.
         :return: value of is_game_over
         """
         if self.is_win():
-            print(f"Game over: {symbol}'s win!")
-            self.is_game_over = True
+            self.status = ["X", "O"].index(symbol) + 1
         elif self.is_draw():
-            print("Game over: draw.")
-            self.is_game_over = True
-        return self.is_game_over
+            self.status = 3
+        return self.status > 0
 
     def print_board(self):
         """
         Prints the current game board to the console.
         """
         print("\t" + "\t".join([str(x) for x in range(3)]))
-        [print(f"{idx}\t" + "\t".join(row)) for idx, row in enumerate(self.board)]
+        [print(f"{idx}\t" + "\t".join(row))
+         for idx, row in enumerate(self.board)]
 
     def make_move(self, symbol: str, row: int, col: int) -> bool:
         """
@@ -110,9 +142,30 @@ class TicTacToeGame:
         :param col: second-level index of board
         :return: True if successful, else False
         """
-        if not self.is_move_valid(row, col):
+        if not self.is_move_valid(symbol, row, col):
             return False
         self.board[row][col] = symbol
-        self.update_is_game_over(symbol) and self.toggle_players()
-        self.print_board()
+        not self.update_is_game_over(symbol) and self.toggle_players()
         return True
+
+
+if __name__ == '__main__':
+    new_game = TicTacToeGame()
+    player_x, player_o = new_game.players
+    move_list = [
+        (player_x, (0, 0)),
+        (player_x, (0, 1)),         # Wrong turn
+        (player_o, (0, 1)),
+        (player_x, (10, 10)),       # Out of range
+        (player_x, (0, 0)),         # Occupied space
+        (player_x, (1, 0)),
+        (player_o, (1, 1)),
+        (player_x, (2, 0)),         # Player X wins
+        (player_x, (2, 2)),         # Game is over
+        (player_o, (2, 2))          # Wrong turn
+    ]
+    for player, move in move_list:
+        player.pick_square(*move)
+        print(TicTacToeGame.VALIDATION_CODES[new_game.validation])
+        print(TicTacToeGame.STATUS_CODES[new_game.status])
+        new_game.print_board()
