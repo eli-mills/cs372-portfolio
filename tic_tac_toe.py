@@ -27,8 +27,7 @@ class Player:
         #     print(f"Player {self.SYMBOL}: it is not your turn.")
         #     return False
 
-        return self.GAME.make_move(self.SYMBOL, row, col) \
-            or print("Move failed validation. Try again.")
+        return self.GAME.make_move(self.SYMBOL, row, col)
 
 
 class TicTacToeGame:
@@ -59,6 +58,17 @@ class TicTacToeGame:
         self.players = Player("X", self), Player("O", self)
         self.status = 0
         self.validation = 0
+
+    @staticmethod
+    def validate_input(user_move):
+        while True:
+            try:
+                row, col = user_move.split(" ")
+                row, col = int(row), int(col)
+                return row, col
+            except ValueError:
+                print("Moves must be in the form 'row col'. Try again.")
+                user_move = input(">")
 
     def toggle_players(self) -> None:
         """
@@ -102,7 +112,8 @@ class TicTacToeGame:
             or all([self.board[idx][idx] == self.board[0][0] != "_"
                     for idx in range(3)]) \
             or all([self.board[row][col] == self.board[1][1] != "_"
-                    for row in range(3) for col in range(2, -1, -1)])
+                    for row in range(3) for col in range(2, -1, -1)
+                    if row + col == 2])
 
     def is_draw(self) -> bool:
         """

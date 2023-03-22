@@ -1,15 +1,15 @@
 import socket
-from chat_server import ChatSocket, get_args
+from chat_server import ChatInterface, get_args
 
 
 def main(host, port):
     # Set up socket
     with socket.create_connection((host, port)) as server_socket:
         print(f"Connected to: {host} on port: {port}")
-        chatter = ChatSocket(server_socket)
+        chatter = ChatInterface(server_socket)
 
         # Main loop
-        while chatter.state != ChatSocket.TERMINATE:
+        while chatter.state != ChatInterface.TERMINATE:
             chatter.chat()
 
 
