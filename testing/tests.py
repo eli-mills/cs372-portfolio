@@ -1,5 +1,5 @@
 import unittest, socket
-from chat_server import read_incoming_data
+from src.chat_server import read_incoming_data
 
 
 class TestReadIncomingData(unittest.TestCase):
