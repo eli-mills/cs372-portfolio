@@ -1,3 +1,5 @@
+from typing import Union
+
 class Player:
     """
     Defines data members and methods for a Tic Tac Toe player.
@@ -42,13 +44,19 @@ class TicTacToeGame:
         "INDEX OUT OF RANGE"
     ]
 
+    PASSED, WRONG_TURN, SPACE_OCCUPIED, GAME_OVER, INDEX_OUT_OF_RANGE = range(5)
+
     STATUS_CODES = [
         "X TURN",
         "O TURN",
         "X WON",
         "O WON",
-        "DRAW"
+        "DRAW",
+        "X QUIT",
+        "O QUIT"
     ]
+
+    X_TURN, O_TURN, X_WON, O_WON, DRAW, X_QUIT, O_QUIT = range(7)
 
     def __init__(self):
         """
@@ -60,15 +68,19 @@ class TicTacToeGame:
         self.validation = 0
 
     @staticmethod
-    def validate_input(user_move):
-        while True:
-            try:
-                row, col = user_move.split(" ")
-                row, col = int(row), int(col)
-                return row, col
-            except ValueError:
-                print("Moves must be in the form 'row col'. Try again.")
-                user_move = input(">")
+    def validate_input(user_move: str) -> Union[tuple[int, int], None]:
+        """
+        Convert given move string into a move tuple if valid.
+        :param user_move: string of expected form row col
+        :return: converted move if valid, else None
+        """
+        try:
+            row, col = user_move.split(" ")
+            row, col = int(row), int(col)
+            return row, col
+        except ValueError:
+            print("Moves must be in the form 'row col'. Try again.")
+            return None
 
     def toggle_players(self) -> None:
         """
@@ -155,6 +167,14 @@ class TicTacToeGame:
         self.board[row][col] = symbol
         not self.update_is_game_over(symbol) and self.toggle_players()
         return True
+
+    def quit(self):
+        """
+        Update internal state if game quits on a player's turn.
+        """
+        self.status = self.X_QUIT if self.status == self.X_TURN \
+            else self.O_QUIT if self.status == self.O_TURN \
+            else self.status
 
 
 def tic_tac_toe_cli():
