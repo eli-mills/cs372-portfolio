@@ -1,5 +1,6 @@
 import socket
-from chat_server import ChatInterface, get_args
+from chat_server import get_args
+from chat_interface import ChatInterface
 
 
 def main(host, port):
