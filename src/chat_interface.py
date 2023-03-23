@@ -3,11 +3,22 @@ from typing import Union
 
 
 class ChatInterface:
-    CHATTING, WAITING, TERMINATE = range(3)  # Status codes
-    SOCKET_BUFFER = 1024  # Buffer argument for recv
-    DELIMITER = '\0'  # Use to sep length and data
+    """
+    Define data members and methods for a socket-based chat CLI.
+    """
 
+    # CONSTANTS
+    CHATTING, WAITING, TERMINATE = range(3)         # Status codes
+    SOCKET_BUFFER = 1024                            # Buffer argument for recv
+    DELIMITER = '\0'                                # Use to sep length and data
+
+    # METHODS
     def __init__(self, conn_socket, is_server=False):
+        """
+        Create a new ChatInterface.
+        :param conn_socket: socket to use for CLI.
+        :param is_server: set True if interface is server, False if client.
+        """
         self.conn_socket = conn_socket
         self.state = self.WAITING if is_server else self.CHATTING
         self.do_long_prompt = True
@@ -24,12 +35,16 @@ class ChatInterface:
             raise ValueError("read_incoming_data: missing valid start token")
         return socket_content.split(ChatInterface.DELIMITER)[1:]
 
-    def read_incoming_data(self):
-        # Receive data length
+    def read_incoming_data(self) -> str:
+        """
+        Read and parse data from the interface's socket.
+        :return: extracted data from socket.
+        """
         socket_content = self.conn_socket.recv(self.SOCKET_BUFFER).decode()
         if not socket_content:
             return
 
+        # Receive data length
         while len(self.parse_socket_data(socket_content)) < 2:
             socket_content += self.conn_socket.recv(self.SOCKET_BUFFER).decode()
 
@@ -41,7 +56,11 @@ class ChatInterface:
 
         return data.strip()
 
-    def send_outgoing_data(self, msg_to_send):
+    def send_outgoing_data(self, msg_to_send: str):
+        """
+        Send the given message to the interface's socket.
+        :param msg_to_send: data to send to socket.
+        """
         # Format and package data
         str_msg = self.DELIMITER.join(["", str(len(msg_to_send)), msg_to_send])
         byte_msg = str_msg.encode()
@@ -77,16 +96,14 @@ class ChatInterface:
 
         # String messages
         if self.cli.game_confirmed:
-            return message if self.cli.make_player_move(message,
-                                                        self.state == self.WAITING) else None
-
+            return message if self.cli.make_player_move(message, self.state == self.WAITING) else None
         self.state == self.WAITING and print(message)
         return message
 
-    def receive_and_handle_message(self) -> bool:
+    def receive_and_handle_message(self):
         """
-        Handle incoming message from socket.
-        :return: True if message should break main loop, else False.
+        Blocks until message received from socket, then parses message. Update
+        state whether ready to send or need to terminate.
         """
         message_received = self.read_incoming_data()
         self.parse_for_command(message_received)
@@ -94,7 +111,8 @@ class ChatInterface:
 
     def send_and_handle_user_input(self):
         """
-        Prompt for user input until acceptable input received. Updates state.
+        Prompt for user input until acceptable input received. Update state
+        whether ready to read or need to terminate.
         """
         self.do_long_prompt and print(
             "Type /q to quit\nEnter message to send...")
