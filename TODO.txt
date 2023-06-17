@@ -1,2 +1,4 @@
-[X]  Fix bug on empty input
-[X]  Fix bug on server sends /q
+[X]     Fix bug on empty input
+[X]     Fix bug on server sends /q
+[ ]     Fix bug where tictactoe requestor can accept own game if invitee responds
+        with regular text.
