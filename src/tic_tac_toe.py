@@ -160,7 +160,8 @@ class TicTacToeCli:
         self.game = TicTacToeGame()
         self.player, self.opponent = self.game.players
         self.game_requested = False         # Used to coordinate multiplayer
-        self.game_confirmed = False         # USed to coordinate multiplayer
+        self.game_confirmed = False         # Used to coordinate multiplayer
+        self.is_requesting_party = False
 
     @staticmethod
     def validate_input(user_move: str) -> Union[tuple[int, int], None]:
@@ -225,6 +226,7 @@ class TicTacToeCli:
         if is_requestor:
             # Person who initiates game is player X
             self.player, self.opponent = self.game.players
+            self.is_requesting_party = True
         else:
             # Person who receives game request needs to approve
             print("Play Tic-Tac-Toe? Type /tac to play, /toe to cancel.")
@@ -234,8 +236,8 @@ class TicTacToeCli:
         """
         Use when accepting a game invitation to update acceptor state or show
         prompt to requestor.
-        :param is_acceptor: set True when called by acceptor, False when called
-            by requestor.
+        :param is_acceptor: set True when called by message sender, 
+            False when called by message receiver.
         :return: True if successful, else False.
         """
         # Validation
@@ -245,9 +247,13 @@ class TicTacToeCli:
         if not self.game_requested:
             print("No game to confirm.")
             return False
+        if is_acceptor and self.is_requesting_party:
+            print("You cannot accept your own invitation!")
+            return False
 
         # Update state
         self.game_confirmed = True
+        self.is_requesting_party = False
         if is_acceptor:
             # Person who accepts game request is player O
             self.opponent, self.player = self.game.players
@@ -261,8 +267,8 @@ class TicTacToeCli:
         """
         Use when rejecting a game invitation to update state of requestor and
         rejector, and to show prompt to requestor.
-        :param is_waiting: set True when called by requestor, False when called
-            by rejector.
+        :param is_waiting: set True when called by message receiver, 
+            False when called by message sender.
         :return: True if successful, else False.
         """
         # Validation
@@ -272,10 +278,14 @@ class TicTacToeCli:
         if not self.game_requested:
             print("No game to reject.")
             return False
+        if not is_waiting and self.is_requesting_party:
+            print("You cannot reject your own invitation!")
+            return False
 
         # Update state
-        if self.game_requested and is_waiting:
+        if self.game_requested and self.is_requesting_party:
             print("Your request was rejected.")
+        self.is_requesting_party = False
         self.end_game()
         return True
 
@@ -292,6 +302,7 @@ class TicTacToeCli:
         self.game = TicTacToeGame()
         self.game_confirmed = False
         self.game_requested = False
+        self.is_requesting_party = False
 
     def print_board(self):
         """
